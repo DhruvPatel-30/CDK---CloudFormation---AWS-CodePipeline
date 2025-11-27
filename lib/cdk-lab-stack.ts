@@ -1,29 +1,31 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
-import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
 
 export class CdkLabStack extends cdk.Stack {
+  public readonly lambdaFunction: lambda.Function;
+
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const helloFn = new lambda.Function(this, "HelloFunction", {
+    this.lambdaFunction = new lambda.Function(this, "HelloLambda", {
       runtime: lambda.Runtime.NODEJS_18_X,
-      handler: "hello.handler",
-      code: lambda.Code.fromAsset("lambda"),
+      handler: "index.handler",
+      code: lambda.Code.fromInline(`
+        exports.handler = async function(event) {
+          return {
+            statusCode: 200,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: "Hello from Lambda!" })
+          };
+        };
+      `),
     });
 
-    const api = new apigwv2.HttpApi(this, "HttpApi");
-
-    api.addRoutes({
-      path: "/hello",
-      methods: [apigwv2.HttpMethod.GET],
-      integration: new HttpLambdaIntegration("HelloIntegration", helloFn),
-    });
-
-    new cdk.CfnOutput(this, "ApiUrl", {
-      value: api.apiEndpoint + "/hello",
+    new apigateway.LambdaRestApi(this, "HelloApi", {
+      handler: this.lambdaFunction,
+      proxy: true,
     });
   }
 }

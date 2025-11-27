@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/cdk---cloud_formation---aws-code_pipeline.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/cdk-lab.ts",
   "watch": {
     "include": [
       "**"
